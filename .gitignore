@@ -58,5 +58,3 @@ profile*
 *flamegraph*
 pnpm-lock.yaml
 *.lock
-
-.env
