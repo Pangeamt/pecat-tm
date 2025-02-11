@@ -62,4 +62,4 @@ pnpm-lock.yaml
 
 .env
 package-lock.json
-.env
+*.env
