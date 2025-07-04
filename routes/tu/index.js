@@ -186,7 +186,11 @@ module.exports = async function (fastify, opts) {
         body.hits.hits.map((hit) => {
           docs.push({
             id: hit._id,
-            text: hit._source.source_text,
+            source_language: hit._source.source_language,
+            target_language: hit._source.target_language,
+            source_text: hit._source.source_text,
+            translated_text: hit._source.translated_text,
+            context: hit._source.context,
           });
         });
         return reply.send({
@@ -273,6 +277,7 @@ module.exports = async function (fastify, opts) {
             create_date: new Date(),
             update_date: new Date(),
           },
+          refresh: "wait_for",
         });
 
         return reply.send(body);
@@ -379,6 +384,7 @@ module.exports = async function (fastify, opts) {
               update_date: new Date(),
             },
           },
+          refresh: "wait_for",
         });
 
         return reply.send(body);
