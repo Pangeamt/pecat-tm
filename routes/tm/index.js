@@ -182,27 +182,30 @@ module.exports = async function (fastify, opts) {
 
   fastify.post("/import", async function (request, reply) {
     try {
-      const { translation_memory, units } = request.body;
+      const { translation_memory, units, tm } = request.body;
   
-      if (!translation_memory || !Array.isArray(units)) {
-        return reply.badRequest("Invalid import structure");
+      if (!translation_memory || !Array.isArray(units))  return reply.badRequest("Invalid import structure");
+      let finalTmId;
+
+      if ( tm !== 0 ) finalTmId = tm;
+      else{
+          const tmId = translation_memory.id || undefined;
+
+          const tmDoc = {
+            name: translation_memory.name,
+            context: translation_memory.context,
+          };
+      
+          // Crear la TM (con ID opcional)
+          const tmResponse = await client.index({
+            index: "translation_memory",
+            id: tmId,
+            body: tmDoc,
+            refresh: "wait_for",
+          });
+
+          finalTmId = tmResponse.body._id;
       }
-  
-      const tmId = translation_memory.id || undefined;
-      const tmDoc = {
-        name: translation_memory.name,
-        context: translation_memory.context,
-      };
-  
-      // Crear la TM (con ID opcional)
-      const tmResponse = await client.index({
-        index: "translation_memory",
-        id: tmId,
-        body: tmDoc,
-        refresh: "wait_for",
-      });
-  
-      const finalTmId = tmResponse.body._id;
   
       // Crear todas las unidades
       const bulkBody = units.flatMap((unit) => [
@@ -220,9 +223,7 @@ module.exports = async function (fastify, opts) {
         body: bulkBody,
       });
   
-      if (bulkResponse.body.errors) {
-        return reply.internalServerError("Some translation units failed to import");
-      }
+      if (bulkResponse.body.errors) return reply.internalServerError("Some translation units failed to import");
   
       return reply.send({
         message: "TM and units imported successfully",
