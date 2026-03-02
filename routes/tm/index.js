@@ -66,6 +66,8 @@ module.exports = async function (fastify, opts) {
           };
         });
 
+        console.log("docs", docs);
+
         return reply.send({ total: body.hits.total.value, docs, });
       } catch (error) {
         return fastify.httpErrors.internalServerError(error.message);
@@ -187,7 +189,9 @@ module.exports = async function (fastify, opts) {
       if (!translation_memory || !Array.isArray(units))  return reply.badRequest("Invalid import structure");
       let finalTmId;
 
-      if ( tm !== 0 ) finalTmId = tm;
+      console.log("tm", tm);
+
+      if ( tm && tm !== 0 ) finalTmId = tm;
       else{
           const tmId = translation_memory.id || undefined;
 
@@ -206,6 +210,8 @@ module.exports = async function (fastify, opts) {
 
           finalTmId = tmResponse.body._id;
       }
+
+      console.log("finalTmId", finalTmId);
   
       // Crear todas las unidades
       const bulkBody = units.flatMap((unit) => [
@@ -217,13 +223,20 @@ module.exports = async function (fastify, opts) {
           update_date: unit.update_date || new Date(),
         },
       ]);
+
+      console.log("bulkBody", bulkBody);
   
       const bulkResponse = await client.bulk({
         refresh: "wait_for",
         body: bulkBody,
       });
+
   
       if (bulkResponse.body.errors) return reply.internalServerError("Some translation units failed to import");
+
+      console.log("bulkResponse", bulkResponse);
+      console.log("finalTmId", finalTmId);
+      console.log("units.length", units.length);
   
       return reply.send({
         message: "TM and units imported successfully",
